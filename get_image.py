@@ -2,46 +2,7 @@ import os
 import cv2
 import numpy as np
 import xml.etree.ElementTree as ET
-
 from keras.preprocessing import image
-
-def rect_to_mask(Rectlist, target_size = (229, 229), dist = 0):
-	Masklist = []
-	if 'filepaths' in Rectlist[0].keys(): # the list is patient
-		for pat in Rectlist:
-			patname = pat['name']
-			labname = pat['label']
-			filepaths = pat['filepaths']
-			rects = pat['rects']
-			imgs = []
-			mask = {'name': patname, 'label': labname, 'filepaths': filepaths}
-			for rect_info in rects:
-				[x1, y1, x2, y2] = extand(rect_info['rect'], size = rect_info['size'], dist = dist)
-				(h, w, d) = rect_info['size']
-				(tg_h, tg_w) = target_size
-				tg_x1 = int(x1 * tg_h // h); tg_x2 = int(x2 * tg_h // h);
-				tg_y1 = int(y1 * tg_w // w); tg_y2 = int(y2 * tg_w // w);
-				img = np.zeros((tg_h, tg_w, d))
-				img[tg_x1:tg_x2 + 1, tg_y1:tg_y2 + 1, :] = 255
-				imgs.append(img)
-			mask['images'] = imgs
-			Masklist.append(mask)
-	return Masklist
-
-def extand(rect, size, dist = 0):
-	[x1, y1, x2, y2] = rect
-	(h, w, depth) = size
-	if -1 < dist < 1:
-		dx = dist * (x2 - x1)
-		dy = dist * (y2 - y1)
-	else: 
-		dx = dist
-		dy = dist 
-	x1 = max(0, x1 - dx)
-	y1 = max(0, y1 - dy)
-	x2 = min(h - 1, x2 + dx)
-	y2 = min(w - 1, y2 + dy)
-	return [x1, y1, x2, y2]
 
 def add_mask_pat(Patlist, Masklist):
 	PatROIlist = []
@@ -81,14 +42,6 @@ def add_mask_pat(Patlist, Masklist):
 		if rois != []:
 			patroi = {'name': patname1, 'label': labname1, 'filepaths': roifilepaths, 'images': rois}
 			PatROIlist.append(patroi)
-	'''
-	# for check the missing mask image
-	for pat2 in Masklist:
-		filepaths2 = pat2['filepaths']
-		for filepath2 in filepaths2:
-			if filepath2 != ' ':
-				print(filepath2)
-	'''
 
 	return PatROIlist
 
